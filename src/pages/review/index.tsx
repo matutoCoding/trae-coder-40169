@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { View, Text, ScrollView, Image } from '@tarojs/components'
 import Taro, { usePullDownRefresh } from '@tarojs/taro'
 import classnames from 'classnames'
 import styles from './index.module.scss'
 import { useAppStore } from '@/store/useStore'
-import { FEEDBACK_TAGS } from '@/types'
+import { FEEDBACK_TAGS, MEMBER_CATEGORY_OPTIONS, FOLLOW_STATUS_OPTIONS } from '@/types'
+import type { Member } from '@/types'
 
 const ReviewPage: React.FC = () => {
   usePullDownRefresh(() => {
@@ -22,9 +23,9 @@ const ReviewPage: React.FC = () => {
   const getArrivedCount = useAppStore(s => s.getArrivedCount)
   const getRedeemedCount = useAppStore(s => s.getRedeemedCount)
   const getOverallCompletionRate = useAppStore(s => s.getOverallCompletionRate)
-  const getStaffArrivedCount = useAppStore(s => s.getStaffArrivedCount)
-  const getStaffContactCount = useAppStore(s => s.getStaffContactCount)
-  const getStaffSatisfactionNotes = useAppStore(s => s.getStaffSatisfactionNotes)
+  const getStaffDailyDetail = useAppStore(s => s.getStaffDailyDetail)
+
+  const [expandedStaff, setExpandedStaff] = useState<string | null>(null)
 
   const todayDate = useMemo(() => {
     const now = new Date()
@@ -45,13 +46,11 @@ const ReviewPage: React.FC = () => {
 
   const sortedStaff = useMemo(() => {
     return [...staffList]
-      .map(staff => ({
-        ...staff,
-        liveArrivedCount: getStaffArrivedCount(staff.id),
-        liveContactCount: getStaffContactCount(staff.id),
-        liveNotes: getStaffSatisfactionNotes(staff.id)
-      }))
-      .sort((a, b) => b.liveArrivedCount - a.liveArrivedCount)
+      .map(staff => {
+        const detail = getStaffDailyDetail(staff.id)
+        return { ...staff, ...detail }
+      })
+      .sort((a, b) => b.arrivedCount - a.arrivedCount)
   }, [staffList, members])
 
   const feedbackStats = useMemo(() => {
@@ -116,6 +115,30 @@ const ReviewPage: React.FC = () => {
   const getFeedbackBarColor = (idx: number) => {
     const colors = [styles.blue, styles.orange, styles.green, styles.purple, styles.gray]
     return colors[Math.min(idx, colors.length - 1)]
+  }
+
+  const getCategoryColor = (member: Member) => {
+    const opt = MEMBER_CATEGORY_OPTIONS.find(o => o.value === member.category)
+    return opt ? opt.color : '#86909C'
+  }
+
+  const getCategoryLabel = (member: Member) => {
+    const opt = MEMBER_CATEGORY_OPTIONS.find(o => o.value === member.category)
+    return opt ? opt.label : ''
+  }
+
+  const getStatusColor = (member: Member) => {
+    const opt = FOLLOW_STATUS_OPTIONS.find(o => o.value === member.followStatus)
+    return opt ? opt.color : '#86909C'
+  }
+
+  const getStatusLabel = (member: Member) => {
+    const opt = FOLLOW_STATUS_OPTIONS.find(o => o.value === member.followStatus)
+    return opt ? opt.label : ''
+  }
+
+  const toggleExpand = (staffId: string) => {
+    setExpandedStaff(prev => (prev === staffId ? null : staffId))
   }
 
   const pendingCount = members.filter(m => m.followStatus === 'pending').length
@@ -248,69 +271,187 @@ const ReviewPage: React.FC = () => {
         <View className={styles.section}>
           <View className={styles.sectionHeader}>
             <Text className={styles.sectionTitle}>店员业绩榜</Text>
-            <Text className={styles.sectionHint}>按到店人数排序</Text>
+            <Text className={styles.sectionHint}>点击卡片查看明细</Text>
           </View>
 
           <View className={styles.staffList}>
-            {sortedStaff.map((staff, idx) => (
-              <View key={staff.id} className={styles.staffCard}>
-                <View className={styles.staffHeader}>
-                  <Image className={styles.staffAvatar} src={staff.avatar} mode='aspectFill' />
-                  <View className={styles.staffInfo}>
-                    <View className={styles.staffNameRow}>
-                      <Text className={styles.staffName}>{staff.name}</Text>
-                      <View className={styles.staffRole}>
-                        <Text>{staff.role}</Text>
-                      </View>
-                      <View className={classnames(styles.rankBadge, getRankClass(idx))}>
-                        <Text>{getRankText(idx)}</Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
+            {sortedStaff.map((staff, idx) => {
+              const isExpanded = expandedStaff === staff.id
+              const isRedeemed = (m: Member) => m.followStatus === 'redeemed'
+              const isArrivedOnly = (m: Member) => m.followStatus === 'arrived'
+              const isContactedOnly = (m: Member) =>
+                m.followStatus !== 'pending' &&
+                m.followStatus !== 'arrived' &&
+                m.followStatus !== 'redeemed'
 
-                <View className={styles.staffStats}>
-                  <View className={styles.staffStat}>
-                    <Text className={classnames(styles.staffStatVal, styles.blue)}>
-                      {staff.liveContactCount}
-                    </Text>
-                    <Text className={styles.staffStatName}>联系数</Text>
-                  </View>
-                  <View className={styles.staffStat}>
-                    <Text className={classnames(styles.staffStatVal, styles.green)}>
-                      {staff.liveArrivedCount}
-                    </Text>
-                    <Text className={styles.staffStatName}>到店数</Text>
-                  </View>
-                  <View className={styles.staffStat}>
-                    <Text className={classnames(styles.staffStatVal, styles.gray)}>
-                      {staff.liveNotes.length}
-                    </Text>
-                    <Text className={styles.staffStatName}>好评数</Text>
-                  </View>
-                </View>
-
-                <View className={styles.notesSection}>
-                  <Text className={styles.notesTitle}>
-                    <Text>💬</Text>
-                    <Text>会员满意度备注（{staff.liveNotes.length}条）</Text>
-                  </Text>
-                  {staff.liveNotes.length > 0 ? (
-                    <View className={styles.notesList}>
-                      {staff.liveNotes.map((note, nIdx) => (
-                        <View key={nIdx} className={styles.noteItem}>
-                          <Text className={styles.noteText}>{note}</Text>
+              return (
+                <View key={staff.id} className={styles.staffCard}>
+                  <View className={styles.staffHeader} onClick={() => toggleExpand(staff.id)}>
+                    <Image className={styles.staffAvatar} src={staff.avatar} mode='aspectFill' />
+                    <View className={styles.staffInfo}>
+                      <View className={styles.staffNameRow}>
+                        <Text className={styles.staffName}>{staff.name}</Text>
+                        <View className={styles.staffRole}>
+                          <Text>{staff.role}</Text>
                         </View>
-                      ))}
+                        <View className={classnames(styles.rankBadge, getRankClass(idx))}>
+                          <Text>{getRankText(idx)}</Text>
+                        </View>
+                      </View>
                     </View>
-                  ) : (
-                    <View className={styles.emptyNotes}>
-                      <Text className={styles.emptyNotesText}>暂无满意度备注</Text>
+                    <View className={classnames(styles.expandIcon, isExpanded && styles.expanded)}>
+                      <Text>›</Text>
+                    </View>
+                  </View>
+
+                  <View className={styles.staffStats}>
+                    <View className={styles.staffStat}>
+                      <Text className={classnames(styles.staffStatVal, styles.blue)}>
+                        {staff.contactCount}
+                      </Text>
+                      <Text className={styles.staffStatName}>联系数</Text>
+                    </View>
+                    <View className={styles.staffStat}>
+                      <Text className={classnames(styles.staffStatVal, styles.green)}>
+                        {staff.arrivedCount}
+                      </Text>
+                      <Text className={styles.staffStatName}>到店数</Text>
+                    </View>
+                    <View className={styles.staffStat}>
+                      <Text className={classnames(styles.staffStatVal, styles.purple)}>
+                        {staff.redeemedCount}
+                      </Text>
+                      <Text className={styles.staffStatName}>核销数</Text>
+                    </View>
+                    <View className={styles.staffStat}>
+                      <Text className={classnames(styles.staffStatVal, styles.gray)}>
+                        {staff.satisfactionNotes.length}
+                      </Text>
+                      <Text className={styles.staffStatName}>好评数</Text>
+                    </View>
+                  </View>
+
+                  {isExpanded && (
+                    <View className={styles.staffDetail}>
+                      {staff.topFeedbackTags.length > 0 && (
+                        <View className={styles.detailSection}>
+                          <Text className={styles.detailLabel}>
+                            <Text>🏷️</Text>
+                            <Text>主要反馈标签</Text>
+                          </Text>
+                          <View className={styles.detailTags}>
+                            {staff.topFeedbackTags.slice(0, 5).map(item => (
+                              <View key={item.tag} className={styles.detailTag}>
+                                <Text className={styles.detailTagText}>{item.tag}</Text>
+                                <Text className={styles.detailTagCount}>{item.count}次</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      )}
+
+                      <View className={styles.detailSection}>
+                        <Text className={styles.detailLabel}>
+                          <Text>�</Text>
+                          <Text>今日跟进会员（{staff.members.length}人）</Text>
+                        </Text>
+
+                        {staff.members.length > 0 ? (
+                          <View className={styles.memberDetailList}>
+                            {staff.members.map(member => (
+                              <View key={member.id} className={styles.memberDetailItem}>
+                                <View className={styles.memberDetailLeft}>
+                                  <Image
+                                    className={styles.memberDetailAvatar}
+                                    src={member.avatar}
+                                    mode='aspectFill'
+                                  />
+                                  <View className={styles.memberDetailInfo}>
+                                    <View className={styles.memberDetailNameRow}>
+                                      <Text className={styles.memberDetailName}>
+                                        {member.name}
+                                      </Text>
+                                      <View
+                                        className={styles.memberDetailCategoryTag}
+                                        style={{
+                                          background: getCategoryColor(member) + '15',
+                                          color: getCategoryColor(member)
+                                        }}
+                                      >
+                                        <Text>{getCategoryLabel(member)}</Text>
+                                      </View>
+                                      <View
+                                        className={styles.memberDetailStatusTag}
+                                        style={{
+                                          background: getStatusColor(member) + '15',
+                                          color: getStatusColor(member)
+                                        }}
+                                      >
+                                        <Text>
+                                          {getStatusLabel(member)}
+                                          {isRedeemed(member) && ' ✓'}
+                                        </Text>
+                                      </View>
+                                    </View>
+                                    <View className={styles.memberDetailDesc}>
+                                      <Text>{member.categoryDesc}</Text>
+                                      {member.feedback && (
+                                        <Text className={styles.memberDetailFeedback}>
+                                          {' · '}「{member.feedback}」
+                                        </Text>
+                                      )}
+                                    </View>
+                                  </View>
+                                </View>
+                                <View className={styles.memberDetailFlags}>
+                                  {isContactedOnly(member) && (
+                                    <View className={classnames(styles.flag, styles.blue)}>
+                                      <Text>已联系</Text>
+                                    </View>
+                                  )}
+                                  {isArrivedOnly(member) && (
+                                    <View className={classnames(styles.flag, styles.green)}>
+                                      <Text>已到店</Text>
+                                    </View>
+                                  )}
+                                  {isRedeemed(member) && (
+                                    <View className={classnames(styles.flag, styles.purple)}>
+                                      <Text>已核销</Text>
+                                    </View>
+                                  )}
+                                </View>
+                              </View>
+                            ))}
+                          </View>
+                        ) : (
+                          <View className={styles.emptyMemberDetail}>
+                            <Text className={styles.emptyMemberDetailText}>
+                              今日暂无跟进会员
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+
+                      {staff.satisfactionNotes.length > 0 && (
+                        <View className={styles.notesSection}>
+                          <Text className={styles.notesTitle}>
+                            <Text>💬</Text>
+                            <Text>会员满意度备注（{staff.satisfactionNotes.length}条）</Text>
+                          </Text>
+                          <View className={styles.notesList}>
+                            {staff.satisfactionNotes.map((note, nIdx) => (
+                              <View key={nIdx} className={styles.noteItem}>
+                                <Text className={styles.noteText}>{note}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      )}
                     </View>
                   )}
                 </View>
-              </View>
-            ))}
+              )
+            })}
           </View>
         </View>
 

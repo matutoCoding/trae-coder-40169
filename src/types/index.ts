@@ -2,6 +2,23 @@ export type MemberCategory = 'balance' | 'chronic' | 'expiring'
 
 export type FollowStatus = 'pending' | 'contacted' | 'arrived' | 'redeemed' | 'unneeded'
 
+export type TimelineEventType =
+  | 'status_contacted'
+  | 'status_arrived'
+  | 'status_redeemed'
+  | 'status_unneeded'
+  | 'feedback_update'
+
+export interface TimelineEvent {
+  id: string
+  type: TimelineEventType
+  timestamp: number
+  status?: FollowStatus
+  feedbackText?: string
+  feedbackTags?: string[]
+  description: string
+}
+
 export interface Member {
   id: string
   name: string
@@ -21,6 +38,7 @@ export interface Member {
   arrivedDate?: string
   redeemedDate?: string
   satisfaction?: number
+  timeline: TimelineEvent[]
 }
 
 export type ActionType = 'phone' | 'wechat' | 'appointment'
@@ -44,6 +62,16 @@ export interface Staff {
   role: string
 }
 
+export interface StaffDailyDetail {
+  staff: Staff
+  contactCount: number
+  arrivedCount: number
+  redeemedCount: number
+  satisfactionNotes: string[]
+  members: Member[]
+  topFeedbackTags: { tag: string; count: number }[]
+}
+
 export const FOLLOW_STATUS_OPTIONS: { value: FollowStatus; label: string; color: string }[] = [
   { value: 'pending', label: '待跟进', color: '#86909C' },
   { value: 'contacted', label: '已联系', color: '#1677FF' },
@@ -51,6 +79,14 @@ export const FOLLOW_STATUS_OPTIONS: { value: FollowStatus; label: string; color:
   { value: 'redeemed', label: '已核销', color: '#722ED1' },
   { value: 'unneeded', label: '暂不需要', color: '#86909C' }
 ]
+
+export const TIMELINE_EVENT_LABEL: Record<TimelineEventType, { label: string; icon: string; color: string }> = {
+  status_contacted: { label: '已联系', icon: '📞', color: '#1677FF' },
+  status_arrived: { label: '已到店', icon: '🏪', color: '#2BA471' },
+  status_redeemed: { label: '已核销', icon: '💳', color: '#722ED1' },
+  status_unneeded: { label: '暂不需要', icon: '⏸️', color: '#86909C' },
+  feedback_update: { label: '更新反馈', icon: '📝', color: '#FA8C16' }
+}
 
 export const MEMBER_CATEGORY_OPTIONS: { value: MemberCategory; label: string; color: string; bgColor: string }[] = [
   { value: 'balance', label: '余额活跃', color: '#2BA471', bgColor: '#E6F7EC' },

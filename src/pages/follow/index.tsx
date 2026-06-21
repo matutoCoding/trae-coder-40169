@@ -4,8 +4,8 @@ import Taro from '@tarojs/taro'
 import classnames from 'classnames'
 import styles from './index.module.scss'
 import { useAppStore } from '@/store/useStore'
-import type { FollowStatus, MemberCategory } from '@/types'
-import { MEMBER_CATEGORY_OPTIONS, FOLLOW_STATUS_OPTIONS, FEEDBACK_TAGS } from '@/types'
+import type { FollowStatus, MemberCategory, TimelineEvent } from '@/types'
+import { MEMBER_CATEGORY_OPTIONS, FOLLOW_STATUS_OPTIONS, FEEDBACK_TAGS, TIMELINE_EVENT_LABEL } from '@/types'
 
 interface DraftState {
   status: FollowStatus
@@ -16,14 +16,13 @@ interface DraftState {
 const FollowPage: React.FC = () => {
   const members = useAppStore(s => s.members)
   const staffList = useAppStore(s => s.staffList)
-  const updateMember = useAppStore(s => s.updateMember)
-  const getContactedCount = useAppStore(s => s.getContactedCount)
-  const getArrivedCount = useAppStore(s => s.getArrivedCount)
-  const getRedeemedCount = useAppStore(s => s.getRedeemedCount)
+  const saveMemberFollow = useAppStore(s => s.saveMemberFollow)
+  const getFilteredCounts = useAppStore(s => s.getFilteredCounts)
 
   const [searchText, setSearchText] = useState('')
   const [activeCategory, setActiveCategory] = useState<MemberCategory | 'all'>('all')
   const [activeStatus, setActiveStatus] = useState<FollowStatus | 'all'>('all')
+  const [activeStaffId, setActiveStaffId] = useState<string | 'all'>('all')
   const [expandedCard, setExpandedCard] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<Record<string, DraftState>>({})
 
@@ -64,38 +63,60 @@ const FollowPage: React.FC = () => {
       if (activeCategory !== 'all' && m.category !== activeCategory) {
         return false
       }
-      if (activeStatus !== 'all' && m.followStatus !== activeStatus) {
+      if (activeStaffId !== 'all' && m.assignedStaffId !== activeStaffId) {
         return false
+      }
+      if (activeStatus !== 'all') {
+        if (activeStatus === 'arrived') {
+          if (m.followStatus !== 'arrived' && m.followStatus !== 'redeemed') return false
+        } else {
+          if (m.followStatus !== activeStatus) return false
+        }
       }
       return true
     })
-  }, [members, searchText, activeCategory, activeStatus])
+  }, [members, searchText, activeCategory, activeStatus, activeStaffId])
 
-  const summaryCounts = useMemo(() => ({
-    contacted: getContactedCount(),
-    arrived: getArrivedCount(),
-    redeemed: getRedeemedCount()
-  }), [members, getContactedCount, getArrivedCount, getRedeemedCount])
+  const summaryCounts = useMemo(() => {
+    return getFilteredCounts({ staffId: activeStaffId === 'all' ? undefined : activeStaffId })
+  }, [members, activeStaffId, getFilteredCounts])
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = { all: members.length }
+    const staffFiltered = members.filter(m =>
+      activeStaffId === 'all' ? true : m.assignedStaffId === activeStaffId
+    )
+    counts.all = staffFiltered.length
     FOLLOW_STATUS_OPTIONS.forEach(opt => {
       if (opt.value === 'arrived') {
-        counts[opt.value] = members.filter(m => m.followStatus === 'arrived').length
+        counts[opt.value] = staffFiltered.filter(
+          m => m.followStatus === 'arrived' || m.followStatus === 'redeemed'
+        ).length
       } else {
-        counts[opt.value] = members.filter(m => m.followStatus === opt.value).length
+        counts[opt.value] = staffFiltered.filter(m => m.followStatus === opt.value).length
       }
     })
     return counts
-  }, [members])
+  }, [members, activeStaffId])
 
   const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: members.length }
+    const staffFiltered = members.filter(m =>
+      activeStaffId === 'all' ? true : m.assignedStaffId === activeStaffId
+    )
+    const counts: Record<string, number> = { all: staffFiltered.length }
     MEMBER_CATEGORY_OPTIONS.forEach(opt => {
-      counts[opt.value] = members.filter(m => m.category === opt.value).length
+      counts[opt.value] = staffFiltered.filter(m => m.category === opt.value).length
     })
     return counts
-  }, [members])
+  }, [members, activeStaffId])
+
+  const staffCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: members.length }
+    staffList.forEach(s => {
+      counts[s.id] = members.filter(m => m.assignedStaffId === s.id).length
+    })
+    return counts
+  }, [members, staffList])
 
   const toggleExpand = (id: string) => {
     setExpandedCard(prev => (prev === id ? null : id))
@@ -117,19 +138,7 @@ const FollowPage: React.FC = () => {
 
   const handleSave = (memberId: string) => {
     const draft = getDraft(memberId)
-    const today = new Date().toISOString().split('T')[0]
-    updateMember(memberId, {
-      followStatus: draft.status,
-      feedbackTags: draft.feedbackTags,
-      feedback: draft.feedbackText,
-      lastContactDate: today,
-      arrivedDate: draft.status === 'arrived' || draft.status === 'redeemed'
-        ? today
-        : undefined,
-      redeemedDate: draft.status === 'redeemed'
-        ? today
-        : undefined
-    })
+    saveMemberFollow(memberId, draft.status, draft.feedbackTags, draft.feedbackText)
     setDrafts(prev => {
       const next = { ...prev }
       delete next[memberId]
@@ -144,6 +153,13 @@ const FollowPage: React.FC = () => {
     if (!staffId) return '未分配'
     const staff = staffList.find(s => s.id === staffId)
     return staff?.name || '未分配'
+  }
+
+  const formatTime = (timestamp: number) => {
+    const d = new Date(timestamp)
+    const h = String(d.getHours()).padStart(2, '0')
+    const min = String(d.getMinutes()).padStart(2, '0')
+    return `${h}:${min}`
   }
 
   const renderExtraInfo = (member: typeof members[0]) => {
@@ -167,6 +183,56 @@ const FollowPage: React.FC = () => {
     return rows
   }
 
+  const renderTimeline = (timeline: TimelineEvent[]) => {
+    if (!timeline || timeline.length === 0) {
+      return (
+        <View className={styles.emptyTimeline}>
+          <Text className={styles.emptyTimelineText}>暂无跟进记录</Text>
+        </View>
+      )
+    }
+    const sorted = [...timeline].sort((a, b) => b.timestamp - a.timestamp)
+    return (
+      <View className={styles.timeline}>
+        {sorted.map((event, idx) => {
+          const label = TIMELINE_EVENT_LABEL[event.type]
+          const isLast = idx === sorted.length - 1
+          return (
+            <View key={event.id} className={styles.timelineItem}>
+              <View className={styles.timelineLeft}>
+                <View
+                  className={styles.timelineDot}
+                  style={{ background: label.color }}
+                >
+                  <Text>{label.icon}</Text>
+                </View>
+                {!isLast && <View className={styles.timelineLine} />}
+              </View>
+              <View className={styles.timelineBody}>
+                <View className={styles.timelineHeader}>
+                  <Text className={styles.timelineTitle} style={{ color: label.color }}>
+                    {label.label}
+                  </Text>
+                  <Text className={styles.timelineTime}>{formatTime(event.timestamp)}</Text>
+                </View>
+                <Text className={styles.timelineDesc}>{event.description}</Text>
+                {event.feedbackTags && event.feedbackTags.length > 0 && (
+                  <View className={styles.timelineTags}>
+                    {event.feedbackTags.map(tag => (
+                      <View key={tag} className={styles.timelineTag}>
+                        <Text>{tag}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </View>
+          )
+        })}
+      </View>
+    )
+  }
+
   const followStatusList: FollowStatus[] = ['contacted', 'arrived', 'redeemed', 'unneeded']
 
   return (
@@ -183,6 +249,29 @@ const FollowPage: React.FC = () => {
             />
           </View>
           <Button className={styles.filterBtn}>⚙️</Button>
+        </View>
+
+        <View className={styles.staffTabs}>
+          <ScrollView scrollX className={styles.tabsRow}>
+            <Button
+              className={classnames(styles.staffItem, activeStaffId === 'all' && styles.active)}
+              onClick={() => setActiveStaffId('all')}
+            >
+              <Text>全部店员</Text>
+              <View className={styles.staffCount}>{staffCounts.all}</View>
+            </Button>
+            {staffList.map(staff => (
+              <Button
+                key={staff.id}
+                className={classnames(styles.staffItem, activeStaffId === staff.id && styles.active)}
+                onClick={() => setActiveStaffId(staff.id)}
+              >
+                <Image className={styles.staffMiniAvatar} src={staff.avatar} mode='aspectFill' />
+                <Text>{staff.name}</Text>
+                <View className={styles.staffCount}>{staffCounts[staff.id] || 0}</View>
+              </Button>
+            ))}
+          </ScrollView>
         </View>
 
         <View className={styles.filterTabs}>
@@ -224,7 +313,9 @@ const FollowPage: React.FC = () => {
               >
                 <View className={styles.statusDot} />
                 <Text>{opt.label}</Text>
-                <View className={styles.countBadge}>{statusCounts[opt.value] || 0}</View>
+                <View className={styles.countBadge}>
+                  {opt.value === 'arrived' ? `${statusCounts[opt.value] || 0}(含核销)` : (statusCounts[opt.value] || 0)}
+                </View>
               </Button>
             ))}
           </View>
@@ -238,7 +329,10 @@ const FollowPage: React.FC = () => {
               const draft = getDraft(member.id)
               const isExpanded = expandedCard === member.id
               const hasFeedback = (member.feedbackTags?.length || 0) > 0 || !!member.feedback
+              const hasTimeline = member.timeline && member.timeline.length > 0
               const categoryOpt = MEMBER_CATEGORY_OPTIONS.find(o => o.value === member.category)
+              const staffName = getStaffName(member.assignedStaffId)
+              const statusOpt = FOLLOW_STATUS_OPTIONS.find(o => o.value === member.followStatus)
 
               return (
                 <View key={member.id} className={styles.memberCard}>
@@ -256,9 +350,18 @@ const FollowPage: React.FC = () => {
                               <Text>{categoryOpt.label}</Text>
                             </View>
                           )}
+                          {statusOpt && (
+                            <View
+                              className={styles.statusTag}
+                              style={{ background: statusOpt.color + '20', color: statusOpt.color }}
+                            >
+                              <Text>{statusOpt.label}</Text>
+                            </View>
+                          )}
                         </View>
                         <View className={styles.descRow}>
                           <Text>{member.categoryDesc}</Text>
+                          <Text className={styles.staffNameTag}> · {staffName}</Text>
                         </View>
                       </View>
                     </View>
@@ -313,6 +416,15 @@ const FollowPage: React.FC = () => {
 
                     {isExpanded && (
                       <>
+                        {hasTimeline && (
+                          <View className={styles.timelineSection}>
+                            <Text className={styles.timelineLabel}>
+                              🕒 跟进时间线 ({member.timeline.length})
+                            </Text>
+                            {renderTimeline(member.timeline)}
+                          </View>
+                        )}
+
                         {hasFeedback && (
                           <View className={styles.savedFeedback} style={{ marginBottom: '24rpx' }}>
                             {(member.feedbackTags?.length || 0) > 0 && (
@@ -396,7 +508,7 @@ const FollowPage: React.FC = () => {
           <Text className={classnames(styles.summaryNum, styles.arrived)}>
             {summaryCounts.arrived}
           </Text>
-          <Text className={styles.summaryLab}>已到店</Text>
+          <Text className={styles.summaryLab}>已到店{summaryCounts.redeemed > 0 ? `(含核销${summaryCounts.redeemed})` : ''}</Text>
         </View>
         <View className={styles.summaryItem}>
           <Text className={classnames(styles.summaryNum, styles.redeemed)}>

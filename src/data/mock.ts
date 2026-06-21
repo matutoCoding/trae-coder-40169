@@ -1,4 +1,57 @@
-import { Member, SuggestAction, Staff } from '@/types'
+import { Member, SuggestAction, Staff, TimelineEvent, FollowStatus } from '@/types'
+
+const buildInitialTimeline = (
+  memberId: string,
+  status: FollowStatus,
+  lastContactDate?: string,
+  arrivedDate?: string,
+  redeemedDate?: string
+): TimelineEvent[] => {
+  const events: TimelineEvent[] = []
+  const baseTime = new Date('2026-06-22 09:00:00').getTime()
+
+  if (status !== 'pending') {
+    events.push({
+      id: `${memberId}-contact`,
+      type: 'status_contacted',
+      timestamp: baseTime - 3600000,
+      status: 'contacted',
+      description: lastContactDate ? `于${lastContactDate}首次联系` : '首次联系'
+    })
+  }
+
+  if (arrivedDate) {
+    events.push({
+      id: `${memberId}-arrive`,
+      type: 'status_arrived',
+      timestamp: baseTime + 7200000,
+      status: 'arrived',
+      description: `于${arrivedDate}到店`
+    })
+  }
+
+  if (redeemedDate) {
+    events.push({
+      id: `${memberId}-redeem`,
+      type: 'status_redeemed',
+      timestamp: baseTime + 14400000,
+      status: 'redeemed',
+      description: `于${redeemedDate}完成核销`
+    })
+  }
+
+  if (status === 'unneeded') {
+    events.push({
+      id: `${memberId}-unneeded`,
+      type: 'status_unneeded',
+      timestamp: baseTime + 10800000,
+      status: 'unneeded',
+      description: '标记为暂不需要'
+    })
+  }
+
+  return events
+}
 
 export const mockMembers: Member[] = [
   {
@@ -11,7 +64,8 @@ export const mockMembers: Member[] = [
     balance: 3850,
     followStatus: 'pending',
     feedbackTags: [],
-    assignedStaffId: 's1'
+    assignedStaffId: 's1',
+    timeline: buildInitialTimeline('1', 'pending')
   },
   {
     id: '2',
@@ -26,7 +80,8 @@ export const mockMembers: Member[] = [
     feedback: '需要确认药品库存',
     feedbackTags: ['想了解具体药品'],
     assignedStaffId: 's1',
-    lastContactDate: '2026-06-22'
+    lastContactDate: '2026-06-22',
+    timeline: buildInitialTimeline('2', 'contacted', '2026-06-22')
   },
   {
     id: '3',
@@ -41,7 +96,8 @@ export const mockMembers: Member[] = [
     feedbackTags: ['预约药师咨询'],
     assignedStaffId: 's2',
     arrivedDate: '2026-06-22',
-    lastContactDate: '2026-06-21'
+    lastContactDate: '2026-06-21',
+    timeline: buildInitialTimeline('3', 'arrived', '2026-06-21', '2026-06-22')
   },
   {
     id: '4',
@@ -59,7 +115,8 @@ export const mockMembers: Member[] = [
     arrivedDate: '2026-06-22',
     redeemedDate: '2026-06-22',
     lastContactDate: '2026-06-20',
-    satisfaction: 5
+    satisfaction: 5,
+    timeline: buildInitialTimeline('4', 'redeemed', '2026-06-20', '2026-06-22', '2026-06-22')
   },
   {
     id: '5',
@@ -71,7 +128,8 @@ export const mockMembers: Member[] = [
     benefitExpireDate: '2026-06-25',
     followStatus: 'pending',
     feedbackTags: [],
-    assignedStaffId: 's1'
+    assignedStaffId: 's1',
+    timeline: buildInitialTimeline('5', 'pending')
   },
   {
     id: '6',
@@ -85,7 +143,8 @@ export const mockMembers: Member[] = [
     feedback: '想给爸妈买钙片和维生素',
     feedbackTags: ['想给父母买药'],
     assignedStaffId: 's3',
-    lastContactDate: '2026-06-22'
+    lastContactDate: '2026-06-22',
+    timeline: buildInitialTimeline('6', 'contacted', '2026-06-22')
   },
   {
     id: '7',
@@ -99,7 +158,8 @@ export const mockMembers: Member[] = [
     feedback: '最近在外地，暂不需要',
     feedbackTags: [],
     assignedStaffId: 's3',
-    lastContactDate: '2026-06-21'
+    lastContactDate: '2026-06-21',
+    timeline: buildInitialTimeline('7', 'unneeded', '2026-06-21')
   },
   {
     id: '8',
@@ -112,7 +172,8 @@ export const mockMembers: Member[] = [
     nextPurchaseDate: '2026-06-24',
     followStatus: 'pending',
     feedbackTags: [],
-    assignedStaffId: 's2'
+    assignedStaffId: 's2',
+    timeline: buildInitialTimeline('8', 'pending')
   },
   {
     id: '9',
@@ -128,7 +189,8 @@ export const mockMembers: Member[] = [
     assignedStaffId: 's1',
     arrivedDate: '2026-06-22',
     lastContactDate: '2026-06-22',
-    satisfaction: 4
+    satisfaction: 4,
+    timeline: buildInitialTimeline('9', 'arrived', '2026-06-22', '2026-06-22')
   },
   {
     id: '10',
@@ -140,7 +202,8 @@ export const mockMembers: Member[] = [
     balance: 2100,
     followStatus: 'pending',
     feedbackTags: [],
-    assignedStaffId: 's3'
+    assignedStaffId: 's3',
+    timeline: buildInitialTimeline('10', 'pending')
   },
   {
     id: '11',
@@ -153,7 +216,8 @@ export const mockMembers: Member[] = [
     nextPurchaseDate: '2026-06-27',
     followStatus: 'pending',
     feedbackTags: [],
-    assignedStaffId: 's1'
+    assignedStaffId: 's1',
+    timeline: buildInitialTimeline('11', 'pending')
   },
   {
     id: '12',
@@ -167,7 +231,8 @@ export const mockMembers: Member[] = [
     feedback: '需要了解可兑换的商品目录',
     feedbackTags: ['价格有疑问'],
     assignedStaffId: 's2',
-    lastContactDate: '2026-06-22'
+    lastContactDate: '2026-06-22',
+    timeline: buildInitialTimeline('12', 'contacted', '2026-06-22')
   }
 ]
 
