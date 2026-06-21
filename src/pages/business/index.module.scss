@@ -1,0 +1,505 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #E6F7EC 0%, $color-bg-page 40%);
+  padding-bottom: 48rpx;
+}
+
+.header {
+  padding: 32rpx $page-padding;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-bottom-left-radius: 32rpx;
+  border-bottom-right-radius: 32rpx;
+  margin-bottom: -16rpx;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.storeInfo {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.storeIcon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-lg;
+  background: rgba(255, 255, 255, 0.25);
+  @include flex-center;
+  font-size: 40rpx;
+  margin-right: 20rpx;
+}
+
+.storeText {
+  flex: 1;
+}
+
+.storeName {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.dateText {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.weatherBadge {
+  padding: 8rpx 20rpx;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: $radius-round;
+  font-size: $font-size-sm;
+  color: $color-text-white;
+}
+
+.statsSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 24rpx 16rpx;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: $radius-lg;
+  backdrop-filter: blur(10px);
+}
+
+.summaryItem {
+  text-align: center;
+  flex: 1;
+}
+
+.summaryItem + .summaryItem {
+  border-left: 2rpx solid rgba(255, 255, 255, 0.3);
+}
+
+.summaryNum {
+  font-size: 44rpx;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  display: block;
+  line-height: 1.2;
+}
+
+.summaryLabel {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 6rpx;
+}
+
+.content {
+  padding: 0 $page-padding;
+  padding-top: 16rpx;
+}
+
+.section {
+  margin-bottom: $spacing-lg;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  padding: 0 4rpx;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: flex;
+  align-items: center;
+}
+
+.sectionTitle::before {
+  content: '';
+  width: 8rpx;
+  height: 32rpx;
+  background: $color-primary;
+  border-radius: $radius-xs;
+  margin-right: 16rpx;
+}
+
+.sectionAction {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  display: flex;
+  align-items: center;
+}
+
+.categoryCards {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.categoryCard {
+  padding: $spacing-lg;
+  border-radius: $radius-lg;
+  background: $color-bg-card;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-md;
+}
+
+.cardLeft {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.cardIcon {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: $radius-lg;
+  @include flex-center;
+  font-size: 40rpx;
+  margin-right: 20rpx;
+}
+
+.cardIcon.balance {
+  background: $color-balance-bg;
+}
+
+.cardIcon.chronic {
+  background: $color-chronic-bg;
+}
+
+.cardIcon.expiring {
+  background: $color-expiring-bg;
+}
+
+.cardInfo {
+  flex: 1;
+}
+
+.cardTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.cardDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.countBadge {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding: 12rpx 24rpx;
+  border-radius: $radius-round;
+  min-width: 120rpx;
+}
+
+.countBadge.balance {
+  background: $color-balance-bg;
+}
+
+.countBadge.chronic {
+  background: $color-chronic-bg;
+}
+
+.countBadge.expiring {
+  background: $color-expiring-bg;
+}
+
+.countNum {
+  font-size: 44rpx;
+  font-weight: $font-weight-bold;
+  line-height: 1.1;
+}
+
+.countNum.balance {
+  color: $color-balance;
+}
+
+.countNum.chronic {
+  color: $color-chronic;
+}
+
+.countNum.expiring {
+  color: $color-expiring;
+}
+
+.countUnit {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.cardTips {
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-md;
+}
+
+.tipItem {
+  display: flex;
+  align-items: flex-start;
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.tipItem + .tipItem {
+  margin-top: 12rpx;
+}
+
+.tipDot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: $radius-round;
+  margin-top: 14rpx;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+
+.tipDot.balance {
+  background: $color-balance;
+}
+
+.tipDot.chronic {
+  background: $color-chronic;
+}
+
+.tipDot.expiring {
+  background: $color-expiring;
+}
+
+.cardActions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.actionBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-sm;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  transition: all $transition-fast;
+  white-space: nowrap;
+}
+
+.actionBtn.primary {
+  background: $color-primary;
+  color: $color-text-white;
+}
+
+.actionBtn.primary:active {
+  background: $color-primary-dark;
+  opacity: 0.95;
+}
+
+.actionBtn.secondary {
+  background: $color-bg-page;
+  color: $color-primary;
+  border: 2rpx solid $color-primary;
+}
+
+.actionBtn.secondary:active {
+  background: $color-primary;
+  color: $color-text-white;
+  opacity: 0.95;
+}
+
+.actionList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.actionCard {
+  padding: $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+  position: relative;
+  overflow: hidden;
+}
+
+.actionCard::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8rpx;
+}
+
+.actionCard.high::before {
+  background: $color-error;
+}
+
+.actionCard.medium::before {
+  background: $color-warning;
+}
+
+.actionCard.low::before {
+  background: $color-info;
+}
+
+.actionCard.completed {
+  opacity: 0.65;
+}
+
+.actionCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+}
+
+.actionTypeBadge {
+  padding: 6rpx 20rpx;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.actionTypeBadge.phone {
+  background: #E6F4FF;
+  color: $color-info;
+}
+
+.actionTypeBadge.wechat {
+  background: #E6F7EC;
+  color: $color-balance;
+}
+
+.actionTypeBadge.appointment {
+  background: #FFF4E6;
+  color: $color-warning;
+}
+
+.priorityBadge {
+  padding: 6rpx 16rpx;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.priorityBadge.high {
+  background: $color-expiring-bg;
+  color: $color-error;
+}
+
+.priorityBadge.medium {
+  background: $color-chronic-bg;
+  color: $color-warning;
+}
+
+.priorityBadge.low {
+  background: #E6F4FF;
+  color: $color-info;
+}
+
+.actionContent {
+  margin-bottom: 20rpx;
+}
+
+.actionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.actionDesc {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.actionFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.memberTag {
+  display: flex;
+  align-items: center;
+  padding: 6rpx 18rpx;
+  background: $color-bg-page;
+  border-radius: $radius-round;
+}
+
+.memberAvatar {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: $radius-round;
+  margin-right: 12rpx;
+  background: #E5E6EB;
+}
+
+.memberName {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+.doBtn {
+  @include button-reset;
+  padding: 0 36rpx;
+  height: $button-height-sm;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  background: $color-primary;
+  color: $color-text-white;
+  transition: all $transition-fast;
+}
+
+.doBtn:active {
+  background: $color-primary-dark;
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+.doBtn.done {
+  background: $color-bg-hover;
+  color: $color-success;
+}
+
+.emptyState {
+  padding: 96rpx 0;
+  text-align: center;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}

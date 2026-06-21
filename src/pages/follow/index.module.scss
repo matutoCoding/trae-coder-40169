@@ -1,0 +1,549 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 48rpx;
+}
+
+.stickyHeader {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: $color-bg-page;
+  padding-bottom: $spacing-sm;
+}
+
+.searchBar {
+  padding: $spacing-md $page-padding;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.searchInputWrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: $button-height-md;
+  padding: 0 24rpx;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  box-shadow: $shadow-card;
+}
+
+.searchIcon {
+  font-size: 32rpx;
+  margin-right: 16rpx;
+  color: $color-text-tertiary;
+}
+
+.searchInput {
+  flex: 1;
+  height: 100%;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  background: transparent;
+}
+
+.searchInput::placeholder {
+  color: $color-text-tertiary;
+}
+
+.filterBtn {
+  @include button-reset;
+  width: $button-height-md;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  background: $color-bg-card;
+  box-shadow: $shadow-card;
+  font-size: 32rpx;
+  color: $color-text-secondary;
+  transition: all $transition-fast;
+}
+
+.filterBtn:active {
+  background: $color-bg-hover;
+}
+
+.filterTabs {
+  padding: 0 $page-padding;
+  margin-bottom: $spacing-sm;
+}
+
+.tabsRow {
+  display: flex;
+  gap: $spacing-sm;
+  overflow-x: auto;
+  padding-bottom: 8rpx;
+  white-space: nowrap;
+}
+
+.tabItem {
+  @include button-reset;
+  padding: 0 28rpx;
+  height: 60rpx;
+  border-radius: $radius-round;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  background: $color-bg-card;
+  color: $color-text-secondary;
+  flex-shrink: 0;
+  transition: all $transition-fast;
+}
+
+.tabItem.active {
+  background: $color-primary;
+  color: $color-text-white;
+}
+
+.tabItem:active {
+  opacity: 0.9;
+}
+
+.statusTabs {
+  padding: 0 $page-padding;
+  margin-bottom: $spacing-md;
+}
+
+.statusList {
+  display: flex;
+  gap: $spacing-sm;
+  overflow-x: auto;
+  padding-bottom: 8rpx;
+  white-space: nowrap;
+}
+
+.statusItem {
+  @include button-reset;
+  padding: 0 24rpx;
+  height: 56rpx;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  background: $color-bg-card;
+  color: $color-text-secondary;
+  flex-shrink: 0;
+  transition: all $transition-fast;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.statusItem.active {
+  background: $color-primary;
+  color: $color-text-white;
+}
+
+.statusDot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: $radius-round;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.countBadge {
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 10rpx;
+  border-radius: $radius-round;
+  background: rgba(0, 0, 0, 0.1);
+  font-size: $font-size-xs;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content {
+  padding: 0 $page-padding;
+}
+
+.memberList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.memberCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+  transition: all $transition-base;
+}
+
+.cardTop {
+  padding: $spacing-lg;
+  padding-bottom: $spacing-md;
+}
+
+.memberInfo {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.avatar {
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: $radius-round;
+  background: #E5E6EB;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.infoMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10rpx;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.name {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.phone {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-left: 8rpx;
+}
+
+.categoryTag {
+  padding: 6rpx 16rpx;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.categoryTag.balance {
+  background: $color-balance-bg;
+  color: $color-balance;
+}
+
+.categoryTag.chronic {
+  background: $color-chronic-bg;
+  color: $color-chronic;
+}
+
+.categoryTag.expiring {
+  background: $color-expiring-bg;
+  color: $color-expiring;
+}
+
+.descRow {
+  display: flex;
+  align-items: center;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.5;
+  @include text-ellipsis;
+}
+
+.extraInfo {
+  padding: 16rpx 24rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: 8rpx;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.extraRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.extraRow + .extraRow {
+  margin-top: 8rpx;
+}
+
+.extraLabel {
+  color: $color-text-tertiary;
+}
+
+.extraValue {
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+.extraValue.highlight {
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.statusSection {
+  padding: 0 $spacing-lg;
+  padding-bottom: $spacing-md;
+}
+
+.sectionLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-medium;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.statusOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.statusOption {
+  @include button-reset;
+  padding: 0 28rpx;
+  height: 64rpx;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  border: 2rpx solid $color-border;
+  background: $color-bg-card;
+  color: $color-text-secondary;
+  transition: all $transition-fast;
+}
+
+.statusOption:active {
+  transform: scale(0.98);
+}
+
+.statusOption.active.contacted {
+  background: $color-contacted-bg;
+  color: $color-contacted;
+  border-color: $color-contacted;
+}
+
+.statusOption.active.arrived {
+  background: $color-arrived-bg;
+  color: $color-arrived;
+  border-color: $color-arrived;
+}
+
+.statusOption.active.redeemed {
+  background: $color-redeemed-bg;
+  color: $color-redeemed;
+  border-color: $color-redeemed;
+}
+
+.statusOption.active.unneeded {
+  background: $color-unneeded-bg;
+  color: $color-unneeded;
+  border-color: $color-unneeded;
+}
+
+.statusOption.active.pending {
+  background: $color-bg-hover;
+  color: $color-text-tertiary;
+  border-color: $color-text-tertiary;
+}
+
+.feedbackSection {
+  padding: $spacing-md $spacing-lg;
+  border-top: 2rpx solid $color-divider;
+  background: #FAFBFC;
+}
+
+.feedbackHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.feedbackLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+.toggleBtn {
+  @include button-reset;
+  font-size: $font-size-sm;
+  color: $color-primary;
+  padding: 8rpx 16rpx;
+  height: auto;
+}
+
+.tagGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.tagChip {
+  @include button-reset;
+  padding: 0 24rpx;
+  height: 56rpx;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  background: $color-bg-card;
+  color: $color-text-secondary;
+  border: 2rpx solid $color-border;
+  transition: all $transition-fast;
+}
+
+.tagChip.selected {
+  background: rgba(43, 164, 113, 0.1);
+  color: $color-primary;
+  border-color: $color-primary;
+}
+
+.tagChip:active {
+  transform: scale(0.98);
+}
+
+.textareaWrap {
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  border: 2rpx solid $color-border;
+}
+
+.feedbackTextarea {
+  width: 100%;
+  min-height: 140rpx;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: 1.6;
+  background: transparent;
+}
+
+.feedbackTextarea::placeholder {
+  color: $color-text-disabled;
+}
+
+.textareaCount {
+  text-align: right;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 8rpx;
+}
+
+.savedFeedback {
+  padding: 24rpx;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  border: 2rpx solid $color-primary;
+}
+
+.savedTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.savedTag {
+  padding: 6rpx 16rpx;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  background: rgba(43, 164, 113, 0.1);
+  color: $color-primary;
+}
+
+.savedText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.cardFooter {
+  padding: 0 $spacing-lg;
+  padding-bottom: $spacing-lg;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.saveBtn {
+  @include button-reset;
+  padding: 0 36rpx;
+  height: $button-height-sm;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  background: $color-primary;
+  color: $color-text-white;
+  transition: all $transition-fast;
+}
+
+.saveBtn:active {
+  background: $color-primary-dark;
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+.emptyState {
+  padding: 160rpx 0;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 100rpx;
+  display: block;
+  margin-bottom: 24rpx;
+  opacity: 0.5;
+}
+
+.emptyTitle {
+  font-size: $font-size-lg;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.emptyDesc {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.summaryBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20rpx $page-padding;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 100;
+}
+
+.summaryItem {
+  text-align: center;
+  flex: 1;
+}
+
+.summaryNum {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  display: block;
+  line-height: 1.2;
+}
+
+.summaryNum.contacted { color: $color-contacted; }
+.summaryNum.arrived { color: $color-arrived; }
+.summaryNum.redeemed { color: $color-redeemed; }
+
+.summaryLab {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 6rpx;
+}

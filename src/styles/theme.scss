@@ -1,0 +1,52 @@
+// ============================================
+// 主题配色变量（医药健康风格 - 药店管理小程序）
+// ============================================
+
+// 品牌主题色：医药绿（代表健康、专业、信任）
+$color-primary: #2BA471;
+$color-primary-light: #52C41A;
+$color-primary-dark: #1A8055;
+
+// 功能色
+$color-success: #2BA471;
+$color-warning: #FF8A3D;
+$color-error: #F53F3F;
+$color-info: #1677FF;
+
+// 业务色
+$color-balance: #2BA471;       // 余额活跃 - 绿色
+$color-chronic: #FF8A3D;       // 慢病临近 - 橙色
+$color-expiring: #F53F3F;      // 权益过期 - 红色
+
+// 业务标签背景色（浅色）
+$color-balance-bg: #E6F7EC;
+$color-chronic-bg: #FFF4E6;
+$color-expiring-bg: #FFECE8;
+
+// 跟进状态色
+$color-contacted: #1677FF;      // 已联系 - 蓝色
+$color-arrived: #2BA471;        // 已到店 - 绿色
+$color-redeemed: #722ED1;       // 已核销 - 紫色
+$color-unneeded: #86909C;       // 暂不需要 - 灰色
+
+// 跟进状态背景色
+$color-contacted-bg: #E6F4FF;
+$color-arrived-bg: #E6F7EC;
+$color-redeemed-bg: #F3E8FF;
+$color-unneeded-bg: #F2F3F5;
+
+// 背景色
+$color-bg-page: #F5F9F6;        // 页面背景（淡绿白）
+$color-bg-card: #FFFFFF;        // 卡片背景
+$color-bg-hover: #F2F7F4;
+
+// 文本色
+$color-text-primary: #1D2129;
+$color-text-secondary: #4E5969;
+$color-text-tertiary: #86909C;
+$color-text-disabled: #C9CDD4;
+$color-text-white: #FFFFFF;
+
+// 边框色
+$color-border: #E5E6EB;
+$color-divider: #F2F3F5;
