@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Member, SuggestAction, Staff, FollowStatus } from '@/types'
+import type { Member, SuggestAction, Staff } from '@/types'
 import { mockMembers, mockActions, mockStaff } from '@/data/mock'
 
 interface AppState {
@@ -9,18 +9,19 @@ interface AppState {
 
   toggleAction: (actionId: string) => void
   updateMember: (memberId: string, patch: Partial<Member>) => void
+
   getContactedCount: () => number
   getArrivedCount: () => number
   getRedeemedCount: () => number
   getBalanceActiveCount: () => number
   getChronicNearbyCount: () => number
   getExpiringSoonCount: () => number
-  getStaffById: (staffId: string) => Staff | undefined
+  getOverallCompletionRate: () => number
+
   getMemberAvatar: (memberName: string) => string
   getStaffArrivedCount: (staffId: string) => number
   getStaffContactCount: (staffId: string) => number
   getStaffSatisfactionNotes: (staffId: string) => string[]
-  getOverallCompletionRate: () => number
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -48,10 +49,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     return get().members.filter(m => m.followStatus !== 'pending').length
   },
 
-  getOnlyContactedCount: () => {
-    return get().members.filter(m => m.followStatus === 'contacted').length
-  },
-
   getArrivedCount: () => {
     return get().members.filter(m =>
       m.followStatus === 'arrived' || m.followStatus === 'redeemed'
@@ -74,8 +71,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     return get().members.filter(m => m.category === 'expiring').length
   },
 
-  getStaffById: (staffId: string) => {
-    return get().staffList.find(s => s.id === staffId)
+  getOverallCompletionRate: () => {
+    const members = get().members
+    const completed = members.filter(m => m.followStatus !== 'pending').length
+    return members.length > 0 ? Math.round((completed / members.length) * 100) : 0
   },
 
   getMemberAvatar: (memberName: string) => {
@@ -105,11 +104,5 @@ export const useAppStore = create<AppState>((set, get) => ({
         m.followStatus !== 'pending'
       )
       .map(m => `${m.name}：${m.feedback}`)
-  },
-
-  getOverallCompletionRate: () => {
-    const members = get().members
-    const completed = members.filter(m => m.followStatus !== 'pending').length
-    return members.length > 0 ? Math.round((completed / members.length) * 100) : 0
   }
 }))

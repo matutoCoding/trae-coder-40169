@@ -42,21 +42,6 @@ export interface Staff {
   name: string
   avatar: string
   role: string
-  arrivedCount: number
-  contactCount: number
-  satisfactionNotes: string[]
-}
-
-export interface DailyStats {
-  date: string
-  balanceActiveCount: number
-  chronicNearbyCount: number
-  expiringSoonCount: number
-  totalContacted: number
-  totalArrived: number
-  totalRedeemed: number
-  completionRate: number
-  staffList: Staff[]
 }
 
 export const FOLLOW_STATUS_OPTIONS: { value: FollowStatus; label: string; color: string }[] = [

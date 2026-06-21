@@ -107,7 +107,7 @@ const BusinessPage: React.FC = () => {
   const redeemedCount = getRedeemedCount()
 
   return (
-    <ScrollView scrollY className={styles.page} refresherEnabled onRefreshToRefresh={() => {
+    <ScrollView scrollY className={styles.page} refresherEnabled onRefresherRefresh={() => {
       Taro.showToast({ title: '刷新成功', icon: 'success' })
       setTimeout(() => Taro.stopPullDownRefresh(), 500)
     }}>

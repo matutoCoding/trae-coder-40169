@@ -1,4 +1,4 @@
-import { Member, SuggestAction, Staff, DailyStats } from '@/types'
+import { Member, SuggestAction, Staff } from '@/types'
 
 export const mockMembers: Member[] = [
   {
@@ -245,48 +245,18 @@ export const mockStaff: Staff[] = [
     id: 's1',
     name: '李小芳',
     avatar: 'https://picsum.photos/id/64/200/200',
-    role: '执业药师',
-    arrivedCount: 3,
-    contactCount: 12,
-    satisfactionNotes: [
-      '吴姐：专业解答了个账支付范围问题，非常满意',
-      '李大爷：电话提醒很及时，药品预留好了',
-      '王大姐：体检预约安排很周到'
-    ]
+    role: '执业药师'
   },
   {
     id: 's2',
     name: '王大明',
     avatar: 'https://picsum.photos/id/91/200/200',
-    role: '资深店员',
-    arrivedCount: 2,
-    contactCount: 8,
-    satisfactionNotes: [
-      '刘叔：购买糖尿病药物服务很周到',
-      '周大爷：耐心讲解了用药注意事项'
-    ]
+    role: '资深店员'
   },
   {
     id: 's3',
     name: '张小美',
     avatar: 'https://picsum.photos/id/177/200/200',
-    role: '店员',
-    arrivedCount: 1,
-    contactCount: 5,
-    satisfactionNotes: [
-      '赵哥：企微回复很及时，推荐的产品很合适'
-    ]
+    role: '店员'
   }
 ]
-
-export const mockDailyStats: DailyStats = {
-  date: '2026-06-22',
-  balanceActiveCount: 4,
-  chronicNearbyCount: 4,
-  expiringSoonCount: 4,
-  totalContacted: 5,
-  totalArrived: 3,
-  totalRedeemed: 1,
-  completionRate: 68,
-  staffList: mockStaff
-}
