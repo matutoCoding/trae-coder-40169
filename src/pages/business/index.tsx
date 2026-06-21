@@ -23,6 +23,7 @@ const BusinessPage: React.FC = () => {
   const getMemberAvatar = useAppStore(s => s.getMemberAvatar)
   const getContactedCount = useAppStore(s => s.getContactedCount)
   const getArrivedCount = useAppStore(s => s.getArrivedCount)
+  const getRedeemedCount = useAppStore(s => s.getRedeemedCount)
 
   const todayDate = useMemo(() => {
     const now = new Date()
@@ -103,6 +104,7 @@ const BusinessPage: React.FC = () => {
   const completedCount = actions.filter(a => a.completed).length
   const contactedCount = getContactedCount()
   const arrivedCount = getArrivedCount()
+  const redeemedCount = getRedeemedCount()
 
   return (
     <ScrollView scrollY className={styles.page} refresherEnabled onRefreshToRefresh={() => {
@@ -135,8 +137,8 @@ const BusinessPage: React.FC = () => {
             <Text className={styles.summaryLabel}>已到店</Text>
           </View>
           <View className={styles.summaryItem}>
-            <Text className={styles.summaryNum}>{completedCount}/{actions.length}</Text>
-            <Text className={styles.summaryLabel}>任务完成</Text>
+            <Text className={styles.summaryNum}>{redeemedCount}</Text>
+            <Text className={styles.summaryLabel}>已核销</Text>
           </View>
         </View>
       </View>

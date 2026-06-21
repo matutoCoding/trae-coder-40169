@@ -45,6 +45,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   getContactedCount: () => {
+    return get().members.filter(m => m.followStatus !== 'pending').length
+  },
+
+  getOnlyContactedCount: () => {
     return get().members.filter(m => m.followStatus === 'contacted').length
   },
 

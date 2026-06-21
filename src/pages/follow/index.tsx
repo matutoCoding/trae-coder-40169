@@ -73,7 +73,7 @@ const FollowPage: React.FC = () => {
 
   const summaryCounts = useMemo(() => ({
     contacted: getContactedCount(),
-    arrived: getArrivedCount() - getRedeemedCount(),
+    arrived: getArrivedCount(),
     redeemed: getRedeemedCount()
   }), [members, getContactedCount, getArrivedCount, getRedeemedCount])
 
