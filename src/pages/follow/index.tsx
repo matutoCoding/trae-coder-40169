@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { View, Text, ScrollView, Button, Image, Input, Textarea } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import classnames from 'classnames'
 import styles from './index.module.scss'
-import { mockMembers, mockStaff } from '@/data/mock'
-import type { Member, FollowStatus, MemberCategory } from '@/types'
+import { useAppStore } from '@/store/useStore'
+import type { FollowStatus, MemberCategory } from '@/types'
 import { MEMBER_CATEGORY_OPTIONS, FOLLOW_STATUS_OPTIONS, FEEDBACK_TAGS } from '@/types'
 
 interface DraftState {
@@ -14,14 +14,20 @@ interface DraftState {
 }
 
 const FollowPage: React.FC = () => {
-  const [members, setMembers] = useState<Member[]>(mockMembers)
+  const members = useAppStore(s => s.members)
+  const staffList = useAppStore(s => s.staffList)
+  const updateMember = useAppStore(s => s.updateMember)
+  const getContactedCount = useAppStore(s => s.getContactedCount)
+  const getArrivedCount = useAppStore(s => s.getArrivedCount)
+  const getRedeemedCount = useAppStore(s => s.getRedeemedCount)
+
   const [searchText, setSearchText] = useState('')
   const [activeCategory, setActiveCategory] = useState<MemberCategory | 'all'>('all')
   const [activeStatus, setActiveStatus] = useState<FollowStatus | 'all'>('all')
   const [expandedCard, setExpandedCard] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<Record<string, DraftState>>({})
 
-  const getDraft = (memberId: string): DraftState => {
+  const getDraft = useCallback((memberId: string): DraftState => {
     if (drafts[memberId]) return drafts[memberId]
     const m = members.find(x => x.id === memberId)
     return {
@@ -29,14 +35,26 @@ const FollowPage: React.FC = () => {
       feedbackTags: m?.feedbackTags || [],
       feedbackText: m?.feedback || ''
     }
-  }
+  }, [drafts, members])
 
-  const updateDraft = (memberId: string, patch: Partial<DraftState>) => {
-    setDrafts(prev => ({
-      ...prev,
-      [memberId]: { ...getDraft(memberId), ...patch }
-    }))
-  }
+  const updateDraft = useCallback((memberId: string, patch: Partial<DraftState>) => {
+    setDrafts(prev => {
+      const current = prev[memberId]
+        ? prev[memberId]
+        : (() => {
+            const m = members.find(x => x.id === memberId)
+            return {
+              status: m?.followStatus || 'pending',
+              feedbackTags: m?.feedbackTags || [],
+              feedbackText: m?.feedback || ''
+            }
+          })()
+      return {
+        ...prev,
+        [memberId]: { ...current, ...patch }
+      }
+    })
+  }, [members])
 
   const filteredMembers = useMemo(() => {
     return members.filter(m => {
@@ -54,15 +72,19 @@ const FollowPage: React.FC = () => {
   }, [members, searchText, activeCategory, activeStatus])
 
   const summaryCounts = useMemo(() => ({
-    contacted: members.filter(m => m.followStatus === 'contacted').length,
-    arrived: members.filter(m => m.followStatus === 'arrived').length,
-    redeemed: members.filter(m => m.followStatus === 'redeemed').length
-  }), [members])
+    contacted: getContactedCount(),
+    arrived: getArrivedCount() - getRedeemedCount(),
+    redeemed: getRedeemedCount()
+  }), [members, getContactedCount, getArrivedCount, getRedeemedCount])
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = { all: members.length }
     FOLLOW_STATUS_OPTIONS.forEach(opt => {
-      counts[opt.value] = members.filter(m => m.followStatus === opt.value).length
+      if (opt.value === 'arrived') {
+        counts[opt.value] = members.filter(m => m.followStatus === 'arrived').length
+      } else {
+        counts[opt.value] = members.filter(m => m.followStatus === opt.value).length
+      }
     })
     return counts
   }, [members])
@@ -90,35 +112,24 @@ const FollowPage: React.FC = () => {
   }
 
   const handleStatusChange = (memberId: string, status: FollowStatus) => {
-    const draft = getDraft(memberId)
-    if (draft.status === status && status === 'pending') {
-      updateDraft(memberId, { status: 'pending' })
-    } else {
-      updateDraft(memberId, { status })
-    }
+    updateDraft(memberId, { status })
   }
 
   const handleSave = (memberId: string) => {
     const draft = getDraft(memberId)
-    setMembers(prev =>
-      prev.map(m =>
-        m.id === memberId
-          ? {
-              ...m,
-              followStatus: draft.status,
-              feedbackTags: draft.feedbackTags,
-              feedback: draft.feedbackText,
-              lastContactDate: new Date().toISOString().split('T')[0],
-              arrivedDate: draft.status === 'arrived' || draft.status === 'redeemed'
-                ? new Date().toISOString().split('T')[0]
-                : m.arrivedDate,
-              redeemedDate: draft.status === 'redeemed'
-                ? new Date().toISOString().split('T')[0]
-                : m.redeemedDate
-            }
-          : m
-      )
-    )
+    const today = new Date().toISOString().split('T')[0]
+    updateMember(memberId, {
+      followStatus: draft.status,
+      feedbackTags: draft.feedbackTags,
+      feedback: draft.feedbackText,
+      lastContactDate: today,
+      arrivedDate: draft.status === 'arrived' || draft.status === 'redeemed'
+        ? today
+        : undefined,
+      redeemedDate: draft.status === 'redeemed'
+        ? today
+        : undefined
+    })
     setDrafts(prev => {
       const next = { ...prev }
       delete next[memberId]
@@ -126,17 +137,16 @@ const FollowPage: React.FC = () => {
     })
     const statusLabel = FOLLOW_STATUS_OPTIONS.find(o => o.value === draft.status)?.label || draft.status
     Taro.showToast({ title: `已标记为${statusLabel}`, icon: 'success' })
-    const member = members.find(m => m.id === memberId)
-    console.log(`[Follow] 更新会员 ${member?.name} 状态为: ${draft.status}, 反馈标签: ${draft.feedbackTags.join(', ')}`)
+    console.log(`[Follow] 更新会员状态为: ${draft.status}, 反馈标签: ${draft.feedbackTags.join(', ')}`)
   }
 
   const getStaffName = (staffId?: string) => {
     if (!staffId) return '未分配'
-    const staff = mockStaff.find(s => s.id === staffId)
+    const staff = staffList.find(s => s.id === staffId)
     return staff?.name || '未分配'
   }
 
-  const renderExtraInfo = (member: Member) => {
+  const renderExtraInfo = (member: typeof members[0]) => {
     const rows: { label: string; value: string; highlight?: boolean }[] = []
     if (member.balance) {
       rows.push({ label: '个账余额', value: `¥${member.balance.toLocaleString()}`, highlight: true })
@@ -227,7 +237,7 @@ const FollowPage: React.FC = () => {
             {filteredMembers.map(member => {
               const draft = getDraft(member.id)
               const isExpanded = expandedCard === member.id
-              const hasFeedback = (member.feedbackTags?.length || 0) > 0 || member.feedback
+              const hasFeedback = (member.feedbackTags?.length || 0) > 0 || !!member.feedback
               const categoryOpt = MEMBER_CATEGORY_OPTIONS.find(o => o.value === member.category)
 
               return (

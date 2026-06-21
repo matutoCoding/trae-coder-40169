@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Image } from '@tarojs/components'
 import Taro, { usePullDownRefresh } from '@tarojs/taro'
 import classnames from 'classnames'
 import styles from './index.module.scss'
-import { mockMembers, mockStaff, mockDailyStats } from '@/data/mock'
+import { useAppStore } from '@/store/useStore'
 import { FEEDBACK_TAGS } from '@/types'
 
 const ReviewPage: React.FC = () => {
@@ -12,6 +12,19 @@ const ReviewPage: React.FC = () => {
     setTimeout(() => Taro.stopPullDownRefresh(), 500)
     console.log('[Review] 下拉刷新班后复盘数据')
   })
+
+  const members = useAppStore(s => s.members)
+  const staffList = useAppStore(s => s.staffList)
+  const getBalanceActiveCount = useAppStore(s => s.getBalanceActiveCount)
+  const getChronicNearbyCount = useAppStore(s => s.getChronicNearbyCount)
+  const getExpiringSoonCount = useAppStore(s => s.getExpiringSoonCount)
+  const getContactedCount = useAppStore(s => s.getContactedCount)
+  const getArrivedCount = useAppStore(s => s.getArrivedCount)
+  const getRedeemedCount = useAppStore(s => s.getRedeemedCount)
+  const getOverallCompletionRate = useAppStore(s => s.getOverallCompletionRate)
+  const getStaffArrivedCount = useAppStore(s => s.getStaffArrivedCount)
+  const getStaffContactCount = useAppStore(s => s.getStaffContactCount)
+  const getStaffSatisfactionNotes = useAppStore(s => s.getStaffSatisfactionNotes)
 
   const todayDate = useMemo(() => {
     const now = new Date()
@@ -22,15 +35,30 @@ const ReviewPage: React.FC = () => {
     return `${year}年${month}月${day}日 ${weekdays[now.getDay()]}`
   }, [])
 
+  const balanceActiveCount = getBalanceActiveCount()
+  const chronicNearbyCount = getChronicNearbyCount()
+  const expiringSoonCount = getExpiringSoonCount()
+  const contactedCount = getContactedCount()
+  const arrivedCount = getArrivedCount()
+  const redeemedCount = getRedeemedCount()
+  const overallRate = getOverallCompletionRate()
+
   const sortedStaff = useMemo(() => {
-    return [...mockStaff].sort((a, b) => b.arrivedCount - a.arrivedCount)
-  }, [])
+    return [...staffList]
+      .map(staff => ({
+        ...staff,
+        liveArrivedCount: getStaffArrivedCount(staff.id),
+        liveContactCount: getStaffContactCount(staff.id),
+        liveNotes: getStaffSatisfactionNotes(staff.id)
+      }))
+      .sort((a, b) => b.liveArrivedCount - a.liveArrivedCount)
+  }, [staffList, members])
 
   const feedbackStats = useMemo(() => {
     const stats: Record<string, number> = {}
     FEEDBACK_TAGS.forEach(tag => { stats[tag] = 0 })
 
-    mockMembers.forEach(member => {
+    members.forEach(member => {
       member.feedbackTags?.forEach(tag => {
         if (stats[tag] !== undefined) {
           stats[tag] += 1
@@ -56,20 +84,19 @@ const ReviewPage: React.FC = () => {
     }
 
     return { topFeedback, maxCount, quickStats }
-  }, [])
+  }, [members])
 
-  const totalTasks = mockMembers.length
-  const completedTasks = mockMembers.filter(m => m.followStatus !== 'pending').length
-  const overallRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+  const totalTasks = members.length
+  const completedTasks = members.filter(m => m.followStatus !== 'pending').length
 
   const contactRate = totalTasks > 0
-    ? Math.round((mockDailyStats.totalContacted / totalTasks) * 100)
+    ? Math.round((contactedCount / totalTasks) * 100)
     : 0
-  const arriveRate = mockDailyStats.totalContacted > 0
-    ? Math.round((mockDailyStats.totalArrived / mockDailyStats.totalContacted) * 100)
+  const arriveRate = contactedCount > 0
+    ? Math.round((arrivedCount / contactedCount) * 100)
     : 0
-  const redeemRate = mockDailyStats.totalArrived > 0
-    ? Math.round((mockDailyStats.totalRedeemed / mockDailyStats.totalArrived) * 100)
+  const redeemRate = arrivedCount > 0
+    ? Math.round((redeemedCount / arrivedCount) * 100)
     : 0
 
   const getRankClass = (index: number) => {
@@ -91,8 +118,13 @@ const ReviewPage: React.FC = () => {
     return colors[Math.min(idx, colors.length - 1)]
   }
 
-  const pendingCount = mockMembers.filter(m => m.followStatus === 'pending').length
+  const pendingCount = members.filter(m => m.followStatus === 'pending').length
   const needTomorrow = pendingCount > 0
+
+  const pendingExpiring = members.filter(m =>
+    m.followStatus === 'pending' && m.category === 'expiring'
+  )
+  const nearestExpiring = pendingExpiring.length > 0 ? pendingExpiring[0] : null
 
   return (
     <ScrollView scrollY className={styles.page}>
@@ -108,7 +140,7 @@ const ReviewPage: React.FC = () => {
             </View>
           </View>
           <View className={styles.scoreBadge}>
-            <Text className={styles.scoreNum}>{mockDailyStats.completionRate}</Text>
+            <Text className={styles.scoreNum}>{overallRate}</Text>
             <Text className={styles.scoreLabel}>综合评分</Text>
           </View>
         </View>
@@ -116,19 +148,19 @@ const ReviewPage: React.FC = () => {
         <View className={styles.statsGrid}>
           <View className={styles.statCard}>
             <Text className={classnames(styles.statValue, styles.green)}>
-              {mockDailyStats.balanceActiveCount}
+              {balanceActiveCount}
             </Text>
             <Text className={styles.statName}>余额活跃会员</Text>
           </View>
           <View className={styles.statCard}>
             <Text className={classnames(styles.statValue, styles.orange)}>
-              {mockDailyStats.chronicNearbyCount}
+              {chronicNearbyCount}
             </Text>
             <Text className={styles.statName}>慢病临近会员</Text>
           </View>
           <View className={styles.statCard}>
             <Text className={classnames(styles.statValue, styles.purple)}>
-              {mockDailyStats.expiringSoonCount}
+              {expiringSoonCount}
             </Text>
             <Text className={styles.statName}>权益快过期</Text>
           </View>
@@ -170,7 +202,7 @@ const ReviewPage: React.FC = () => {
               <View className={styles.progressLabel}>
                 <Text className={styles.progressName}>📞 联系转化率</Text>
                 <Text className={styles.progressValue}>
-                  {mockDailyStats.totalContacted}/{totalTasks} ({contactRate}%)
+                  {contactedCount}/{totalTasks} ({contactRate}%)
                 </Text>
               </View>
               <View className={styles.progressTrack}>
@@ -185,7 +217,7 @@ const ReviewPage: React.FC = () => {
               <View className={styles.progressLabel}>
                 <Text className={styles.progressName}>🏪 到店转化率</Text>
                 <Text className={styles.progressValue}>
-                  {mockDailyStats.totalArrived}/{mockDailyStats.totalContacted} ({arriveRate}%)
+                  {arrivedCount}/{contactedCount} ({arriveRate}%)
                 </Text>
               </View>
               <View className={styles.progressTrack}>
@@ -200,7 +232,7 @@ const ReviewPage: React.FC = () => {
               <View className={styles.progressLabel}>
                 <Text className={styles.progressName}>💳 核销转化率</Text>
                 <Text className={styles.progressValue}>
-                  {mockDailyStats.totalRedeemed}/{mockDailyStats.totalArrived} ({redeemRate}%)
+                  {redeemedCount}/{arrivedCount} ({redeemRate}%)
                 </Text>
               </View>
               <View className={styles.progressTrack}>
@@ -240,19 +272,19 @@ const ReviewPage: React.FC = () => {
                 <View className={styles.staffStats}>
                   <View className={styles.staffStat}>
                     <Text className={classnames(styles.staffStatVal, styles.blue)}>
-                      {staff.contactCount}
+                      {staff.liveContactCount}
                     </Text>
                     <Text className={styles.staffStatName}>联系数</Text>
                   </View>
                   <View className={styles.staffStat}>
                     <Text className={classnames(styles.staffStatVal, styles.green)}>
-                      {staff.arrivedCount}
+                      {staff.liveArrivedCount}
                     </Text>
                     <Text className={styles.staffStatName}>到店数</Text>
                   </View>
                   <View className={styles.staffStat}>
                     <Text className={classnames(styles.staffStatVal, styles.gray)}>
-                      {staff.satisfactionNotes.length}
+                      {staff.liveNotes.length}
                     </Text>
                     <Text className={styles.staffStatName}>好评数</Text>
                   </View>
@@ -261,11 +293,11 @@ const ReviewPage: React.FC = () => {
                 <View className={styles.notesSection}>
                   <Text className={styles.notesTitle}>
                     <Text>💬</Text>
-                    <Text>会员满意度备注（{staff.satisfactionNotes.length}条）</Text>
+                    <Text>会员满意度备注（{staff.liveNotes.length}条）</Text>
                   </Text>
-                  {staff.satisfactionNotes.length > 0 ? (
+                  {staff.liveNotes.length > 0 ? (
                     <View className={styles.notesList}>
-                      {staff.satisfactionNotes.map((note, nIdx) => (
+                      {staff.liveNotes.map((note, nIdx) => (
                         <View key={nIdx} className={styles.noteItem}>
                           <Text className={styles.noteText}>{note}</Text>
                         </View>
@@ -351,7 +383,10 @@ const ReviewPage: React.FC = () => {
                 <Text className={styles.reminderDesc}>
                   还有 {pendingCount} 位会员今日未完成跟进，
                   建议明天一早优先处理「权益快过期」的会员，
-                  避免权益过期导致会员不满。陈阿姨的测血糖权益仅剩3天，请特别关注。
+                  避免权益过期导致会员不满。
+                  {nearestExpiring
+                    ? `${nearestExpiring.name}的${nearestExpiring.categoryDesc}，请特别关注。`
+                    : ''}
                 </Text>
               </View>
             </View>

@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { View, Text, ScrollView, Button, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import classnames from 'classnames'
 import styles from './index.module.scss'
-import { mockMembers, mockActions, mockDailyStats } from '@/data/mock'
-import type { MemberCategory, SuggestAction, ActionType } from '@/types'
+import { useAppStore } from '@/store/useStore'
+import type { MemberCategory, ActionType } from '@/types'
 import { MEMBER_CATEGORY_OPTIONS } from '@/types'
 
 interface CategoryInfo {
@@ -17,7 +17,13 @@ interface CategoryInfo {
 }
 
 const BusinessPage: React.FC = () => {
-  const [actions, setActions] = useState<SuggestAction[]>(mockActions)
+  const members = useAppStore(s => s.members)
+  const actions = useAppStore(s => s.actions)
+  const toggleAction = useAppStore(s => s.toggleAction)
+  const getMemberAvatar = useAppStore(s => s.getMemberAvatar)
+  const getContactedCount = useAppStore(s => s.getContactedCount)
+  const getArrivedCount = useAppStore(s => s.getArrivedCount)
+
   const todayDate = useMemo(() => {
     const now = new Date()
     const month = now.getMonth() + 1
@@ -27,9 +33,12 @@ const BusinessPage: React.FC = () => {
   }, [])
 
   const categories: CategoryInfo[] = useMemo(() => {
-    const balanceCount = mockMembers.filter(m => m.category === 'balance').length
-    const chronicCount = mockMembers.filter(m => m.category === 'chronic').length
-    const expiringCount = mockMembers.filter(m => m.category === 'expiring').length
+    const balanceCount = members.filter(m => m.category === 'balance').length
+    const chronicCount = members.filter(m => m.category === 'chronic').length
+    const expiringCount = members.filter(m => m.category === 'expiring').length
+    const balanceMembers = members.filter(m => m.category === 'balance')
+    const chronicMembers = members.filter(m => m.category === 'chronic')
+    const expiringMembers = members.filter(m => m.category === 'expiring')
 
     return [
       {
@@ -37,11 +46,9 @@ const BusinessPage: React.FC = () => {
         label: '医保个账余额活跃',
         icon: '💰',
         desc: '近30天个账消费活跃的会员',
-        tips: [
-          `张阿姨：余额 ¥3,850，上次购药10天前`,
-          `赵哥：余额 ¥5,200，近期未消费`,
-          `吴姐：余额 ¥8,600，可推荐保健品`
-        ],
+        tips: balanceMembers.slice(0, 3).map(m =>
+          `${m.name}：余额 ¥${(m.balance || 0).toLocaleString()}，${m.followStatus === 'pending' ? '待跟进' : '已联系'}`
+        ),
         count: balanceCount
       },
       {
@@ -49,11 +56,9 @@ const BusinessPage: React.FC = () => {
         label: '慢病购药周期临近',
         icon: '💊',
         desc: '慢性病用药即将需要续购的会员',
-        tips: [
-          `李大爷：高血压药3天后用完`,
-          `刘叔：糖尿病二甲双胍即将用完`,
-          `周大爷：冠心病药物需要续方`
-        ],
+        tips: chronicMembers.slice(0, 3).map(m =>
+          `${m.name}：${m.chronicDisease || '慢病'}${m.nextPurchaseDate ? ' ' + m.nextPurchaseDate : ''}`
+        ),
         count: chronicCount
       },
       {
@@ -61,23 +66,17 @@ const BusinessPage: React.FC = () => {
         label: '权益快过期',
         icon: '⏰',
         desc: '会员权益7天内即将过期',
-        tips: [
-          `陈阿姨：免费测血糖 3天后过期`,
-          `王大姐：健康体检 7天后过期`,
-          `徐哥：积分兑换权益 5天后过期`
-        ],
+        tips: expiringMembers.slice(0, 3).map(m =>
+          `${m.name}：${m.categoryDesc}${m.benefitExpireDate ? ' ' + m.benefitExpireDate : ''}`
+        ),
         count: expiringCount
       }
     ]
-  }, [])
+  }, [members])
 
   const handleActionComplete = (actionId: string) => {
-    setActions(prev =>
-      prev.map(a =>
-        a.id === actionId ? { ...a, completed: !a.completed } : a
-      )
-    )
     const action = actions.find(a => a.id === actionId)
+    toggleAction(actionId)
     if (action && !action.completed) {
       Taro.showToast({ title: `已完成${action.typeDesc}`, icon: 'success' })
       console.log(`[Business] 完成建议动作: ${action.title}`)
@@ -101,12 +100,9 @@ const BusinessPage: React.FC = () => {
     console.log(`[Business] 快速操作: ${action}`)
   }
 
-  const getMemberAvatar = (memberName: string) => {
-    const member = mockMembers.find(m => m.name === memberName)
-    return member?.avatar || `https://picsum.photos/id/64/200/200`
-  }
-
   const completedCount = actions.filter(a => a.completed).length
+  const contactedCount = getContactedCount()
+  const arrivedCount = getArrivedCount()
 
   return (
     <ScrollView scrollY className={styles.page} refresherEnabled onRefreshToRefresh={() => {
@@ -131,11 +127,11 @@ const BusinessPage: React.FC = () => {
 
         <View className={styles.statsSummary}>
           <View className={styles.summaryItem}>
-            <Text className={styles.summaryNum}>{mockDailyStats.totalContacted}</Text>
+            <Text className={styles.summaryNum}>{contactedCount}</Text>
             <Text className={styles.summaryLabel}>已联系</Text>
           </View>
           <View className={styles.summaryItem}>
-            <Text className={styles.summaryNum}>{mockDailyStats.totalArrived}</Text>
+            <Text className={styles.summaryNum}>{arrivedCount}</Text>
             <Text className={styles.summaryLabel}>已到店</Text>
           </View>
           <View className={styles.summaryItem}>
